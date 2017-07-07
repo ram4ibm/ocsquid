@@ -18,7 +18,7 @@ LABEL io.k8s.description="Squid Proxy" \
 # io.openshift.expose-services="3128:tcp"
 
 # TODO: Install required packages here:
-RUN yum clean all && yum -y update && yum install -y squid && systemctl enable squid 
+RUN yum clean all && yum -y update && yum install -y squid  
 
 # TODO (optional): Copy the builder files into /opt/app-root
 # COPY ./<builder_folder>/ /opt/app-root/
@@ -26,17 +26,16 @@ RUN yum clean all && yum -y update && yum install -y squid && systemctl enable s
 # TODO: Copy the S2I scripts to /usr/libexec/s2i, since openshift/base-centos7 image sets io.openshift.s2i.scripts-url label that way, or update that label
 LABEL io.openshift.s2i.scripts-url=image:///usr/libexec/s2i
 COPY ./.s2i/bin /usr/libexec/s2i
+COPY entrypoint.sh /sbin/entrypoint.sh
 
 # TODO: Drop the root user and make the content of /opt/app-root owned by user 1001
-RUN chown -R squid:squid /etc/squid
-RUN chown -R squid:squid /var/log/squid
-RUN chmod -R 775 /var/log/squid
+RUN chown -R squid:squid /etc/squid && chown -R squid:squid /var/log/squid && chmod -R 775 /var/log/squid && chmod 755 /sbin/entrypoint.sh
+#RUN chown -R squid:squid /var/log/squid
+#RUN chmod -R 775 /var/log/squid
 
 
 # This default user is created in the openshift/base-centos7 image
-USER squid
-
-RUN echo squid -v
+#USER squid
 
 # TODO: Set the default port for applications built using this image
 EXPOSE 3128
@@ -44,4 +43,4 @@ EXPOSE 3128
 VOLUME ["${SQUID_CACHE_DIR}"]
 
 # TODO: Set the default CMD for the image
-CMD ["usage"]
+ENTRYPOINT ["/sbin/entrypoint.sh"]
